@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSP-1.0 Telemetry & Glass-Box Inspector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['Geist Mono', 'JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            obsidian: {
+              950: '#07080B',
+              900: '#0C0E14',
+              850: '#11141D',
+              800: '#171B26',
+              700: '#23293A',
+              600: '#343D54',
+            },
+            steel: {
+              100: '#F1F5F9',
+              200: '#E2E8F0',
+              300: '#CBD5E1',
+              400: '#94A3B8',
+              500: '#64748B',
+            },
+            emerald: {
+              400: '#34D399',
+              500: '#10B981',
+              900: '#064E3B',
+            },
+            amber: {
+              400: '#FBBF24',
+              500: '#F59E0B',
+              900: '#78350F',
+            },
+            crimson: {
+              500: '#EF4444',
+              900: '#7F1D1D',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #07080B;
+      color: #E2E8F0;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Subtle industrial grid */
+    .grid-bg {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    /* Sleek scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0C0E14;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #23293A;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #343D54;
+    }
+    .mono-num {
+      font-variant-numeric: tabular-nums;
+    }
+  </style>
+</head>
+<body class="grid-bg min-h-screen flex flex-col font-sans text-sm selection:bg-zinc-800 selection:text-white">
+
+  <!-- TOP BAR / HEADER -->
+  <header class="border-b border-obsidian-800 bg-obsidian-900/80 backdrop-blur-md sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+        <span class="font-mono text-xs font-semibold tracking-wider text-steel-200 uppercase">NSP-1.0</span>
+        <span class="text-xs text-steel-500 font-mono">/</span>
+        <span class="text-xs font-medium text-steel-400">TELEMETRY & GLASS-BOX INSPECTOR</span>
+      </div>
+      <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-obsidian-800 text-steel-400 border border-obsidian-700">SPEC: v1.0.0-RFC</span>
+    </div>
+
+    <div class="flex items-center space-x-6">
+      <!-- OWNER LANGUAGE SELECTOR -->
+      <div class="flex items-center space-x-2 bg-obsidian-850 border border-obsidian-700/80 rounded-md p-1">
+        <span class="text-[11px] font-mono text-steel-500 pl-2">OWNER LENS:</span>
+        <select id="langSelect" class="bg-obsidian-900 text-xs font-mono text-steel-200 border border-obsidian-700 rounded px-2.5 py-1 focus:outline-none focus:border-steel-400 cursor-pointer">
+          <option value="uz">🇺🇿 O'zbek Tili</option>
+          <option value="en">🇬🇧 English</option>
+          <option value="ru">🇷🇺 Русский</option>
+          <option value="es">🇪🇸 Español</option>
+          <option value="zh">🇨🇳 中文 (Simplified)</option>
+        </select>
+      </div>
+
+      <!-- STATUS BADGE -->
+      <div class="flex items-center space-x-2 text-xs font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 px-3 py-1 rounded">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span>AUDIT: 100% GREEN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- METRIC TILES / HARDWARE & TOKEN TELEMETRY -->
+  <section class="border-b border-obsidian-800 bg-obsidian-900/30 px-6 py-3 grid grid-cols-2 md:grid-cols-5 gap-4">
+    <div class="flex flex-col">
+      <span class="text-[10px] font-mono text-steel-500 uppercase tracking-wider">Traditional Token Tax</span>
+      <span id="tradTokens" class="font-mono text-lg font-semibold text-crimson-500/90 mono-num">850 tok</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[10px] font-mono text-steel-500 uppercase tracking-wider">NSP Symbolic Wire</span>
+      <span id="nspTokens" class="font-mono text-lg font-semibold text-emerald-400 mono-num">48 tok</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[10px] font-mono text-steel-500 uppercase tracking-wider">Net Efficiency Ratio</span>
+      <span class="font-mono text-lg font-semibold text-steel-200 mono-num">94.3% <span class="text-xs text-emerald-400 font-normal">SAVED</span></span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[10px] font-mono text-steel-500 uppercase tracking-wider">Serialization Latency</span>
+      <span class="font-mono text-lg font-semibold text-steel-200 mono-num">&lt; 0.4ms</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-[10px] font-mono text-steel-500 uppercase tracking-wider">Active Swarm Mesh</span>
+      <span class="font-mono text-lg font-semibold text-steel-200 mono-num">2 Agents <span class="text-[11px] text-steel-500">(Gemini 3.5)</span></span>
+    </div>
+  </section>
+
+  <!-- MAIN DUAL-PLANE VIEWPORT -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden">
+    
+    <!-- LEFT PLANE (6 COLS): THE MACHINE WIRE (RAW SYMBOLIC FRAMES) -->
+    <div class="lg:col-span-6 border-r border-obsidian-800 flex flex-col bg-obsidian-950">
+      <div class="px-5 py-3 border-b border-obsidian-800/80 bg-obsidian-900/40 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded bg-steel-400"></span>
+          <span class="font-mono text-xs font-semibold uppercase text-steel-300">PLANE A: Raw Machine Wire</span>
+        </div>
+        <span class="text-[11px] font-mono text-steel-500">IEEE / BPE Tokenizer View</span>
+      </div>
+
+      <!-- RAW FRAME STREAM -->
+      <div id="rawStreamContainer" class="flex-1 p-5 space-y-2.5 overflow-y-auto font-mono text-xs text-steel-400">
+        <!-- Live injected rows -->
+      </div>
+
+      <!-- SIMULATION CONTROLS -->
+      <div class="p-4 border-t border-obsidian-800 bg-obsidian-900/60 flex items-center space-x-3">
+        <button id="btnTxPayment" class="px-3.5 py-2 bg-obsidian-800 hover:bg-obsidian-700 text-steel-200 text-xs font-mono font-medium rounded border border-obsidian-700 transition flex items-center space-x-2">
+          <span>▶ Run: Escrow Payment Tx</span>
+        </button>
+        <button id="btnMaliciousTx" class="px-3.5 py-2 bg-crimson-950/40 hover:bg-crimson-900/50 text-crimson-400 text-xs font-mono font-medium rounded border border-crimson-900/60 transition flex items-center space-x-2">
+          <span>⚡ Trigger: Unauthorized Breach</span>
+        </button>
+        <button id="btnClear" class="px-3 py-2 text-steel-500 hover:text-steel-300 text-xs font-mono transition ml-auto">
+          Clear Stream
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT PLANE (6 COLS): THE OWNER'S LENS (GLASS-BOX DECODER) -->
+    <div class="lg:col-span-6 flex flex-col bg-obsidian-900/20">
+      <div class="px-5 py-3 border-b border-obsidian-800/80 bg-obsidian-900/40 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded bg-emerald-400"></span>
+          <span class="font-mono text-xs font-semibold uppercase text-steel-300">PLANE B: Owner's Transparent Lens</span>
+        </div>
+        <span class="text-[11px] font-mono text-emerald-400/90">Deterministic i18n Translation</span>
+      </div>
+
+      <!-- DECODED HUMAN STREAM -->
+      <div id="decodedStreamContainer" class="flex-1 p-5 space-y-3.5 overflow-y-auto">
+        <!-- Live injected decoded cards -->
+      </div>
+
+      <!-- FOOTER AUDIT STAMP -->
+      <div class="p-3.5 border-t border-obsidian-800 bg-obsidian-900/40 px-5 flex items-center justify-between text-xs font-mono text-steel-500">
+        <span>INSPECTOR: Formal Logic Engine v1.0.0</span>
+        <span class="text-steel-400">Glass-Box Proof: Verified Safe</span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- JAVASCRIPT ENGINE & I18N DICTIONARY -->
+  <script>
+    // OPCODES AND MULTILINGUAL DICTIONARY
+    const OPCODES = {
+      "0x01": {
+        mnemonic: "INIT_GOAL",
+        badge: "bg-steel-500/10 text-steel-300 border-steel-700",
+        uz: "Vazifaning asosiy maqsadi belgilandi",
+        en: "Declared root goal",
+        ru: "Определена главная цель задачи",
+        es: "Objetivo principal declarado",
+        zh: "设定主要任务目标"
+      },
+      "0x02": {
+        mnemonic: "BRANCH_HYPO",
+        badge: "bg-steel-500/10 text-steel-300 border-steel-700",
+        uz: "G'oya/Taxmin ilgari surildi",
+        en: "Branch hypothesis formulated",
+        ru: "Сформирована гипотеза для проверки",
+        es: "Hipótesis formulada para verificación",
+        zh: "提出待验证的假设分支"
+      },
+      "0x31": {
+        mnemonic: "READ_ENTITY",
+        badge: "bg-blue-500/10 text-blue-400 border-blue-900/50",
+        uz: "Ma'lumotlar bazasi yoki fayldan o'qildi",
+        en: "Entity state read",
+        ru: "Прочитано состояние из базы данных",
+        es: "Lectura de estado de base de datos",
+        zh: "从数据库读取状态"
+      },
+      "0x32": {
+        mnemonic: "MUTATE_STATE",
+        badge: "bg-amber-500/10 text-amber-400 border-amber-900/50",
+        uz: "Tizim holatiga aniq o'zgartirish kiritilmoqda",
+        en: "Deterministic state mutated",
+        ru: "Вносится изменение в состояние системы",
+        es: "Mutación de estado del sistema ejecutada",
+        zh: "对系统状态进行精确修改"
+      },
+      "0x33": {
+        mnemonic: "ACQUIRE_LOCK",
+        badge: "bg-amber-500/10 text-amber-400 border-amber-900/50",
+        uz: "Poyga (race condition) himoya qulfi o'rnatildi",
+        en: "Concurrency lock acquired",
+        ru: "Установлен замок защиты от гонки потоков",
+        es: "Bloqueo de concurrencia adquirido",
+        zh: "获取并发安全锁（防止数据冲突）"
+      },
+      "0x34": {
+        mnemonic: "RELEASE_LOCK",
+        badge: "bg-steel-500/10 text-steel-400 border-steel-700",
+        uz: "Himoya qulfi yechildi",
+        en: "Concurrency lock released",
+        ru: "Замок защиты потоков снят",
+        es: "Bloqueo de concurrencia liberado",
+        zh: "释放并发安全锁"
+      },
+      "0x61": {
+        mnemonic: "ASSERT_GREEN",
+        badge: "bg-emerald-500/10 text-emerald-400 border-emerald-900/50",
+        uz: "Avtomat testlar 100% yashil o'tdi",
+        en: "Tests 100% green verified",
+        ru: "Все авто-тесты успешно пройдены",
+        es: "Pruebas automatizadas 100% exitosas",
+        zh: "所有自动化测试验证100%通过"
+      },
+      "0x90": {
+        mnemonic: "HUMAN_REPORT",
+        badge: "bg-emerald-500/10 text-emerald-400 border-emerald-900/50",
+        uz: "Foydalanuvchiga hisobot taqdim etildi",
+        en: "Reported to human user",
+        ru: "Отчет предоставлен владельцу системы",
+        es: "Reporte presentado al usuario",
+        zh: "已向系统所有者提交汇报"
+      },
+      "0xFF": {
+        mnemonic: "SAFETY_REJECT",
+        badge: "bg-crimson-500/10 text-crimson-400 border-crimson-900/50",
+        uz: "Xavfsizlik qoidasiga zid bo'lgani sababli rad etildi",
+        en: "Rejected due to safety violation",
+        ru: "Отклонено из-за нарушения безопасности",
+        es: "Rechazado por violación de seguridad",
+        zh: "因安全违规已被系统拒绝"
+      }
+    };
+
+    const LABELS = {
+      uz: { frame: "Kadr", ctx: "Kontekst", proof: "Isbot/Harakat", safe: "Xavfsizlik muhri", verified: "Tasdiqlangan" },
+      en: { frame: "Frame", ctx: "Context", proof: "Proof/Payload", safe: "Safety Signature", verified: "Verified" },
+      ru: { frame: "Кадр", ctx: "Контекст", proof: "Действие/Доказательство", safe: "Печать безопасности", verified: "Подтверждено" },
+      es: { frame: "Cuadro", ctx: "Contexto", proof: "Acción/Prueba", safe: "Sello de seguridad", verified: "Verificado" },
+      zh: { frame: "帧", ctx: "上下文", proof: "动作/凭证", safe: "安全签名", verified: "已验证" }
+    };
+
+    let currentPackets = [];
+    let currentLang = "uz";
+
+    const rawContainer = document.getElementById("rawStreamContainer");
+    const decodedContainer = document.getElementById("decodedStreamContainer");
+    const langSelect = document.getElementById("langSelect");
+
+    // RENDER FUNCTIONS
+    function renderStreams() {
+      rawContainer.innerHTML = "";
+      decodedContainer.innerHTML = "";
+
+      const lbl = LABELS[currentLang] || LABELS.en;
+
+      currentPackets.forEach((pkt, index) => {
+        const op = OPCODES[pkt.opcode] || {
+          mnemonic: "UNKNOWN",
+          badge: "bg-steel-800 text-steel-400 border-steel-700",
+          [currentLang]: "Noma'lum harakat"
+        };
+        const meaning = op[currentLang] || op.en;
+
+        // 1. Raw Machine Frame row
+        const rawRow = document.createElement("div");
+        rawRow.className = "p-2.5 rounded bg-obsidian-900 border border-obsidian-800 hover:border-obsidian-700 transition flex items-center justify-between";
+        rawRow.innerHTML = `
+          <div class="flex items-center space-x-3 truncate">
+            <span class="text-steel-500 text-[11px] mono-num">#${pkt.id}</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] border ${op.badge}">${pkt.opcode}</span>
+            <span class="text-steel-200 truncate">⟪#${pkt.id}|${pkt.opcode}|@${pkt.context}|π:${pkt.payload}|Σ:${pkt.hash}⟫</span>
+          </div>
+          <span class="text-[10px] text-steel-500 mono-num ml-2 shrink-0">${pkt.time}</span>
+        `;
+        rawContainer.appendChild(rawRow);
+
+        // 2. Decoded Glass-Box Card
+        const card = document.createElement("div");
+        const isReject = pkt.opcode === "0xFF";
+        const borderCls = isReject ? "border-crimson-900/60 bg-crimson-950/20" : "border-obsidian-800 bg-obsidian-850/60";
+
+        card.className = `p-3.5 rounded-md border ${borderCls} transition space-y-2`;
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-mono font-semibold text-steel-400">[${lbl.frame} #${pkt.id}]</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${op.badge}">${op.mnemonic}</span>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-900/50 px-2 py-0.2 rounded">
+              Σ: ${pkt.hash} (${lbl.verified})
+            </span>
+          </div>
+          <div class="text-xs font-medium text-steel-200">
+            ${meaning}
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-obsidian-800/80 text-[11px] font-mono text-steel-400">
+            <div><span class="text-steel-500">${lbl.ctx}:</span> @${pkt.context}</div>
+            <div class="truncate"><span class="text-steel-500">${lbl.proof}:</span> ${pkt.payload}</div>
+          </div>
+        `;
+        decodedContainer.appendChild(card);
+      });
+
+      // Auto scroll to bottom
+      rawContainer.scrollTop = rawContainer.scrollHeight;
+      decodedContainer.scrollTop = decodedContainer.scrollHeight;
+    }
+
+    // SIMULATION PRESETS
+    function runPresetPayment() {
+      currentPackets = [];
+      const steps = [
+        { id: 1, opcode: "0x01", context: "root", payload: "Task:ProcessPayment(User=782, 1000000UZS)", hash: "99a22861" },
+        { id: 2, opcode: "0x33", context: "node_1", payload: "LockId=pay_user_782", hash: "028c23fb" },
+        { id: 3, opcode: "0x31", context: "node_2", payload: "CheckBalance(Acc=782) >= 1000000", hash: "5a38a694" },
+        { id: 4, opcode: "0x32", context: "node_3", payload: "Debit(Acc=782, 1M); Credit(Store=12, 1M)", hash: "4db241e9" },
+        { id: 5, opcode: "0x61", context: "node_4", payload: "IdempotencyVerified; Invariant(Balance>=0)", hash: "1dff65e3" },
+        { id: 6, opcode: "0x34", context: "node_5", payload: "ReleaseLock(pay_user_782)", hash: "e2bd5570" },
+        { id: 7, opcode: "0x90", context: "node_6", payload: "Status=SUCCESS, TxId=TX_998124", hash: "91c60203" },
+      ];
+
+      playStreamSequentially(steps);
+    }
+
+    function runPresetMalicious() {
+      currentPackets = [];
+      const steps = [
+        { id: 1, opcode: "0x01", context: "billing_transfer", payload: "Deduct1M_UZS_And_TransferToStore", hash: "auto" },
+        { id: 2, opcode: "0xFF", context: "#1", payload: "InvalidOpcode; UnauthorizedTransferAttempt", hash: "b9e1104a" },
+      ];
+      playStreamSequentially(steps);
+    }
+
+    function playStreamSequentially(steps) {
+      let i = 0;
+      function next() {
+        if (i < steps.length) {
+          const item = { ...steps[i], time: new Date().toLocaleTimeString() };
+          currentPackets.push(item);
+          renderStreams();
+          i++;
+          setTimeout(next, 320); // 320ms simulated inter-agent latency
+        }
+      }
+      next();
+    }
+
+    // EVENT LISTENERS
+    langSelect.addEventListener("change", (e) => {
+      currentLang = e.target.value;
+      renderStreams();
+    });
+
+    document.getElementById("btnTxPayment").addEventListener("click", runPresetPayment);
+    document.getElementById("btnMaliciousTx").addEventListener("click", runPresetMalicious);
+    document.getElementById("btnClear").addEventListener("click", () => {
+      currentPackets = [];
+      renderStreams();
+    });
+
+    // Auto-launch with default demo on load
+    runPresetPayment();
+  </script>
+</body>
+</html>
