@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nsp-protocol"
+version = "1.0.0"
+description = "Neural Semantic Protocol (NSP): High-Density, Glass-Box Symbolic Communication for AI Agents"
+readme = "README.md"
+authors = [
+    { name = "Javohirbek Asqarov (Jasper)", email = "jasper@antigravity.ai" }
+]
+license = { text = "MIT" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["ai", "agents", "protocol", "token-optimization", "glass-box", "llm-communication"]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Jasper-AI/nsp-protocol"
+Documentation = "https://github.com/Jasper-AI/nsp-protocol#readme"
+Repository = "https://github.com/Jasper-AI/nsp-protocol.git"
+
+[project.scripts]
+nsp-inspect = "nsp_protocol.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
